@@ -1,16 +1,17 @@
 name: macos
 
 on: [push]
-
+env:
+  PROTOC_VERSION: v3.11.2
 jobs:
   compile:
     runs-on: macos-latest
-    
+
     steps:
     - uses: actions/checkout@v2
       with:
         repository: protocolbuffers/protobuf
-        ref: v3.11.2
+        ref: ${{ env.PROTOC_VERSION }}
     - name: Checkout submodules
       shell: bash
       run: |
@@ -26,9 +27,9 @@ jobs:
     - name: configure
       run: ./configure
     - name: make install
-      run: sudo make -j2 && sudo make install DESTDIR=/out
+      run: mkdir destdir && sudo make -j2 && sudo make install DESTDIR=$(pwd)/destdir
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
-        name: protoc-macos
-        path: /out/usr
+        name: protoc-${{ env.PROTOC_VERSION }}-macos
+        path: ./destdir/usr/local

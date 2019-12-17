@@ -1,7 +1,8 @@
 name: windows
 
 on: [push]
-
+env:
+  PROTOC_VERSION: v3.11.2
 jobs:
   build:
     runs-on: windows-latest
@@ -10,28 +11,22 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: protocolbuffers/protobuf
-        ref: v3.11.2
+        ref: ${{ env.PROTOC_VERSION }}
     - name: Checkout submodules
       shell: bash
       run: |
         auth_header="$(git config --local --get http.https://github.com/.extraheader)"
         git submodule sync --recursive
         git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
-    - name: cmake
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: cmake & compile
       run: |
-        mkdir ../install 
         cd cmake
-        mkdir build
-        cd build
-        mkdir release
-        cd release
-        cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../../../install ../..
-    - name: name
-      run: | 
-        cd
+        mkdir install
+        cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
         nmake
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
-        name: protoc-windows
+        name: protoc-${{ env.PROTOC_VERSION }}-windows
         path: .
