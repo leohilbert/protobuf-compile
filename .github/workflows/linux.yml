@@ -1,0 +1,23 @@
+name: compile linux
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        repository: protocolbuffers/protobuf
+        ref: v3.11.2
+    - name: git submodule
+      run: git submodule update --init --recursive
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: make check
+      run: make check
+    - name: make install
+      run: sudo make install
