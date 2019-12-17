@@ -1,9 +1,9 @@
-name: compile linux
+name: compile
 
 on: [push]
 
 jobs:
-  build:
+  linux:
     runs-on: ubuntu-latest
     
     steps:
@@ -21,7 +21,5 @@ jobs:
       run: ./autogen.sh
     - name: configure
       run: ./configure
-    - name: make check
-      run: make check
     - name: make install
-      run: sudo make install
+      run: make -j2 && make install
