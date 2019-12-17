@@ -1,0 +1,112 @@
+name: compile
+
+on: [push]
+env:
+  PROTOC_VERSION: v3.11.2
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: protocolbuffers/protobuf
+        ref: ${{ env.PROTOC_VERSION }}
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: make install
+      run: sudo make -j2 && sudo make install DESTDIR=/out
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-linux
+        path: /out/usr/local
+  macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: protocolbuffers/protobuf
+        ref: ${{ env.PROTOC_VERSION }}
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+    - name: brew
+      run: |
+        brew update
+        brew install autoconf automake libtool make unzip
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: make install
+      run: mkdir destdir && sudo make -j2 && sudo make install DESTDIR=$(pwd)/destdir
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-macos
+        path: ./destdir/usr/local
+  windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: protocolbuffers/protobuf
+        ref: ${{ env.PROTOC_VERSION }}
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: cmake & compile
+      run: |
+        cd cmake
+        mkdir install
+        cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
+        nmake
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-windows
+        path: .
+  release:
+    #if: startsWith(github.ref, 'refs/tags/')
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download windows
+      uses: actions/download-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-windows
+    - name: Download linux
+      uses: actions/download-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-linux
+    - name: Download macos
+      uses: actions/download-artifact@v1
+      with:
+        name: protoc-${{ env.PROTOC_VERSION }}-macos
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          protoc-${{ env.PROTOC_VERSION }}-windows
+          protoc-${{ env.PROTOC_VERSION }}-macos
+          protoc-${{ env.PROTOC_VERSION }}-linux
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
