@@ -22,4 +22,9 @@ jobs:
     - name: configure
       run: ./configure
     - name: make install
-      run: make -j2 && make install
+      run: sudo make -j2 && sudo make install DESTDIR=/out
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: build
+        path: /out
