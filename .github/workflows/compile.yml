@@ -26,5 +26,60 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
-        name: build
-        path: /out
+        name: protoc-linux
+        path: /out/usr
+  macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: protocolbuffers/protobuf
+        ref: v3.11.2
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: make install
+      run: sudo make -j2 && sudo make install DESTDIR=/out
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: protoc-macos
+        path: /out/usr
+  windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: protocolbuffers/protobuf
+        ref: v3.11.2
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+    - name: cmake
+      run: |
+        mkdir ../install 
+        cd cmake
+        mkdir build & cd build
+        mkdir release & cd release
+        cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../../../install ../..
+    - name: name
+      run: | 
+        cd
+        nmake
+    - name: Upload build
+      uses: actions/upload-artifact@v1
+      with:
+        name: protoc-windows
+        path: .
