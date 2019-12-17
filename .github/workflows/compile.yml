@@ -88,26 +88,17 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [linux, macos, windows]
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, macos, windows]
     steps:
-    - name: Download windows
+    - name: Download artifact
       uses: actions/download-artifact@v1
       with:
-        name: protoc-${{ env.PROTOC_VERSION }}-windows
-    - name: Download linux
-      uses: actions/download-artifact@v1
-      with:
-        name: protoc-${{ env.PROTOC_VERSION }}-linux
-    - name: Download macos
-      uses: actions/download-artifact@v1
-      with:
-        name: protoc-${{ env.PROTOC_VERSION }}-macos
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: protoc ${{ env.PROTOC_VERSION }}
-        files: |
-          protoc-${{ env.PROTOC_VERSION }}-windows
-          protoc-${{ env.PROTOC_VERSION }}-macos
-          protoc-${{ env.PROTOC_VERSION }}-linux
+        name: protoc-${{ env.PROTOC_VERSION }}-${{ matrix.os }}
+    - name: attach to release
+      uses: fnkr/github-action-ghr@v1
       env:
+        GHR_COMPRESS: zip
+        GHR_PATH: .
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
