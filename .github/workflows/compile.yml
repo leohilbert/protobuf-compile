@@ -1,6 +1,9 @@
 name: compile
 
-on: [push]
+on:
+  release:
+    types:
+      - published
 env:
   PROTOC_VERSION: v3.11.2
 jobs:
@@ -27,7 +30,7 @@ jobs:
     - name: zip
       uses: montudor/action-zip@v0.1.0
       with:
-        args: zip -qq -r ./result.zip ./out/usr/local/**
+        args: zip -qq -r ./result.zip . -i ./**
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
@@ -50,7 +53,7 @@ jobs:
     - name: brew
       run: |
         brew update
-        brew install autoconf automake libtool make unzip
+        brew install autoconf automake libtool make unzip zip
     - name: autogen
       run: ./autogen.sh
     - name: configure
@@ -58,9 +61,7 @@ jobs:
     - name: make install
       run: mkdir destdir && sudo make -j2 && sudo make install DESTDIR=$(pwd)/destdir
     - name: zip
-      uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -qq -r ./result.zip ./destdir/usr/local/**
+      run: zip -qq -r ./result.zip . -i ./destdir/usr/local/**
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
@@ -88,9 +89,7 @@ jobs:
         cmake -G "NMake Makefiles" -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
         nmake install
     - name: zip
-      uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -qq -r ./result.zip ./cmake/install/**
+      run: powershell Compress-Archive ./cmake/install/ result.zip
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
