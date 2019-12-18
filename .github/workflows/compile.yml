@@ -24,9 +24,9 @@ jobs:
     - name: autogen
       run: ./autogen.sh
     - name: configure
-      run: ./configure --enable-static
+      run: ./configure
     - name: make install
-      run: sudo make -j2 && sudo make install DESTDIR=/out
+      run: sudo make -j8 && sudo make install DESTDIR=/out
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
@@ -53,9 +53,9 @@ jobs:
     - name: autogen
       run: ./autogen.sh
     - name: configure
-      run: ./configure --enable-static
+      run: ./configure
     - name: make install
-      run: mkdir destdir && sudo make -j2 && sudo make install DESTDIR=$(pwd)/destdir
+      run: mkdir destdir && sudo make -j8 && sudo make install DESTDIR=$(pwd)/destdir
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
@@ -80,7 +80,7 @@ jobs:
       run: |
         cd cmake
         mkdir install
-        cmake -G "NMake Makefiles" -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
+        cmake -G "NMake Makefiles" -Dprotobuf_BUILD_SHARED_LIBS=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
         nmake install
     - name: Upload build
       uses: actions/upload-artifact@v1
