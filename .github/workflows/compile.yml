@@ -106,10 +106,11 @@ jobs:
         name: protoc-${{ env.PROTOC_VERSION }}-windows
     - name: zip
       run: |
-        echo ls -la
-        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-linux.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-linux/**
-        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-macos.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-macos/**
-        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-windows.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-windows/**
+        echo $GITHUB_REF
+        cd protoc-${{ env.PROTOC_VERSION }}-linux && zip -r ../protoc-${{ env.PROTOC_VERSION }}-linux.zip * && cd ..
+        cd protoc-${{ env.PROTOC_VERSION }}-macos && zip -r ../protoc-${{ env.PROTOC_VERSION }}-macos.zip * && cd ..
+        cd protoc-${{ env.PROTOC_VERSION }}-windows && zip -r ../protoc-${{ env.PROTOC_VERSION }}-windows.zip * && cd ..
+        echo "$(ls -la)"
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
