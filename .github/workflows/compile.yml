@@ -27,15 +27,11 @@ jobs:
       run: ./configure
     - name: make install
       run: sudo make -j2 && sudo make install DESTDIR=/out
-    - name: zip
-      uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -qq -r ./result.zip . -i ./**
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-linux
-        path: ./result.zip
+        path: /out/usr/local
   macos:
     runs-on: macos-latest
 
@@ -53,20 +49,18 @@ jobs:
     - name: brew
       run: |
         brew update
-        brew install autoconf automake libtool make unzip zip
+        brew install autoconf automake libtool make unzip
     - name: autogen
       run: ./autogen.sh
     - name: configure
       run: ./configure
     - name: make install
       run: mkdir destdir && sudo make -j2 && sudo make install DESTDIR=$(pwd)/destdir
-    - name: zip
-      run: zip -qq -r ./result.zip . -i ./destdir/usr/local/**
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-macos
-        path: ./result.zip
+        path: ./destdir/usr/local
   windows:
     runs-on: windows-latest
     
@@ -88,13 +82,11 @@ jobs:
         mkdir install
         cmake -G "NMake Makefiles" -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
         nmake install
-    - name: zip
-      run: powershell Compress-Archive ./cmake/install/ result.zip
     - name: Upload build
       uses: actions/upload-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-windows
-        path: ./result.zip
+        path: ./cmake/install
   release:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [linux, macos, windows]
@@ -104,23 +96,26 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-linux
-        path: .
     - name: Download macos
       uses: actions/download-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-macos
-        path: .
     - name: Download windows
       uses: actions/download-artifact@v1
       with:
         name: protoc-${{ env.PROTOC_VERSION }}-windows
-        path: .
+    - name: zip
+      run: |
+        echo ls -la
+        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-linux.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-linux/**
+        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-macos.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-macos/**
+        zip -qq -r ./protoc-${{ env.PROTOC_VERSION }}-windows.zip . -i ./protoc-${{ env.PROTOC_VERSION }}-windows/**
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          protoc-${{ env.PROTOC_VERSION }}-linux.zip
-          protoc-${{ env.PROTOC_VERSION }}-macos.zip
-          protoc-${{ env.PROTOC_VERSION }}-windows.zip
+          ./protoc-${{ env.PROTOC_VERSION }}-linux.zip
+          ./protoc-${{ env.PROTOC_VERSION }}-macos.zip
+          ./protoc-${{ env.PROTOC_VERSION }}-windows.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
