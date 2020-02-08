@@ -80,7 +80,7 @@ jobs:
       run: |
         cd cmake
         mkdir install
-        cmake -G "NMake Makefiles" -Dprotobuf_BUILD_SHARED_LIBS=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
+        cmake -G "NMake Makefiles" -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .
         nmake install
     - name: Upload build
       uses: actions/upload-artifact@v1
