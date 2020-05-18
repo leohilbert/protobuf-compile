@@ -5,7 +5,7 @@ on:
     types:
       - published
 env:
-  PROTOC_VERSION: v3.11.4
+  PROTOC_VERSION: v3.12.0
 jobs:
   linux:
     runs-on: ubuntu-latest
